@@ -19,13 +19,13 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
 }
 
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
-  return <tr className={cn("border-b border-slate-200 transition-colors", className)} {...props} />;
+  return <tr className={cn("border-b border-[#1f1f1f] transition-colors", className)} {...props} />;
 }
 
 function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
-      className={cn("h-10 px-2 text-left align-middle font-medium text-slate-700", className)}
+      className={cn("h-10 px-2 text-left align-middle font-medium text-[#a1a1aa]", className)}
       {...props}
     />
   );

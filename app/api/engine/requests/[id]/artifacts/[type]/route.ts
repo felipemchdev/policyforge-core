@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { engineOfflineResponse, fetchEngine, withRateLimit } from "@/lib/server/engineProxy";
+import {
+  fetchEngine,
+  responseForEngineFetchFailure,
+  withRateLimit,
+} from "@/lib/server/engineProxy";
 
 type RouteContext = {
   params: Promise<{ id: string; type: string }>;
@@ -26,11 +30,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const response = await fetchEngine(`/v1/requests/${id}/artifacts/${type}`);
-  if (!response) {
-    return engineOfflineResponse();
+  const engineCall = await fetchEngine(`/v1/requests/${id}/artifacts/${type}`);
+  if (!engineCall.ok) {
+    return responseForEngineFetchFailure(engineCall.failure);
   }
 
+  const { response } = engineCall;
   if (!response.ok) {
     return NextResponse.json(
       {

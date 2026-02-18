@@ -53,10 +53,8 @@ export function DynamicForm({ template, onSubmit, submitError }: DynamicFormProp
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Application form</CardTitle>
-        <CardDescription>
-          Fill the fields and submit to run an evaluation in the selected policy pack.
-        </CardDescription>
+        <CardTitle>Eligibility evaluation input</CardTitle>
+        <CardDescription>Fill the required fields and run policy execution.</CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -67,7 +65,7 @@ export function DynamicForm({ template, onSubmit, submitError }: DynamicFormProp
             const fields = template.fields.filter((field) => field.section === section);
             return (
               <section key={section} className="space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#a1a1aa]">
                   {SECTION_LABELS[section]}
                 </h3>
                 <div className="grid gap-4 md:grid-cols-2">
@@ -97,11 +95,11 @@ export function DynamicForm({ template, onSubmit, submitError }: DynamicFormProp
                             ))}
                           </Select>
                         ) : field.type === "boolean" ? (
-                          <label className="mt-2 flex items-center gap-2 text-sm text-slate-700">
+                          <label className="mt-2 flex items-center gap-2 text-sm text-[#d4d4d8]">
                             <input
                               id={path}
                               type="checkbox"
-                              className="h-4 w-4 rounded border-slate-300"
+                              className="h-4 w-4 rounded border-[#3f3f46] bg-[#111]"
                               {...form.register(path)}
                             />
                             Enabled
@@ -115,7 +113,7 @@ export function DynamicForm({ template, onSubmit, submitError }: DynamicFormProp
                           />
                         )}
                         {typeof message === "string" ? (
-                          <p className="mt-1 text-xs text-rose-600">{message}</p>
+                          <p className="mt-1 text-xs text-[#fca5a5]">{message}</p>
                         ) : null}
                       </div>
                     );
@@ -126,13 +124,13 @@ export function DynamicForm({ template, onSubmit, submitError }: DynamicFormProp
           })}
 
           {submitError ? (
-            <p className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <p className="rounded-md border border-[#7f1d1d] bg-[#450a0a]/40 px-3 py-2 text-sm text-[#fca5a5]">
               {submitError}
             </p>
           ) : null}
 
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Run evaluation"}
+            {isSubmitting ? "Processing request..." : "Run evaluation"}
           </Button>
         </form>
       </CardContent>

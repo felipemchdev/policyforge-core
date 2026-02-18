@@ -24,8 +24,8 @@ export function TemplatePicker({ templates, selectedId, onSelect }: TemplatePick
           >
             <Card
               className={cn(
-                "h-full transition hover:border-slate-400",
-                selected ? "border-slate-900 ring-2 ring-slate-900/20" : "",
+                "h-full transition hover:border-[#3f3f46]",
+                selected ? "border-[#52525b]" : "",
               )}
             >
               <CardHeader>
@@ -36,9 +36,9 @@ export function TemplatePicker({ templates, selectedId, onSelect }: TemplatePick
                 <CardDescription>{template.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-[#a1a1aa]">
                   Suggested policy pack:{" "}
-                  <code className="rounded bg-slate-100 px-1 py-0.5 text-[11px]">
+                  <code className="rounded bg-[#0f0f0f] px-1 py-0.5 text-[11px] text-[#d4d4d8]">
                     {template.selectedPolicyPack}
                   </code>
                 </p>

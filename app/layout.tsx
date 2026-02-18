@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Sora } from "next/font/google";
+import { SiteHeader } from "@/components/layout/site-header";
 import "./globals.css";
 
 const sora = Sora({
@@ -24,8 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${sora.variable} ${ibmPlexMono.variable} antialiased`}>{children}</body>
+    <html lang="en" className="dark">
+      <body className={`${sora.variable} ${ibmPlexMono.variable} min-h-screen antialiased`}>
+        <SiteHeader />
+        <main className="pt-14">{children}</main>
+      </body>
     </html>
   );
 }

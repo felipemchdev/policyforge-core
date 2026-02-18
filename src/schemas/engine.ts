@@ -29,12 +29,22 @@ export const engineRequestResultSchema = z.object({
   decision: z.string().min(1),
   reasons: z.array(z.string()),
   computed_fields: z.record(z.string(), z.unknown()),
+  artifacts: z
+    .record(
+      z.string(),
+      z.object({
+        signed_url: z.string().url().optional(),
+        endpoint: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const proxyErrorSchema = z.object({
   error: z.string().min(1),
   code: z.string().optional(),
   instructions: z.array(z.string()).optional(),
+  technical_status: z.string().optional(),
 });
 
 export type CreateEngineRequestInput = z.infer<typeof createEngineRequestInputSchema>;

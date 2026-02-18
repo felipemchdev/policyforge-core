@@ -7,7 +7,7 @@ function Alert({ className, ...props }: React.ComponentProps<"div">) {
     <div
       role="alert"
       className={cn(
-        "relative w-full rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900",
+        "relative w-full rounded-lg border border-[#854d0e] bg-[#422006]/40 px-4 py-3 text-sm text-[#fde68a]",
         className,
       )}
       {...props}

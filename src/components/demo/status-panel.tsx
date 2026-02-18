@@ -37,14 +37,17 @@ function getTimelineState(status: string, step: TimelineStep) {
 
 function getStatusVariant(status: string) {
   const normalized = status.toLowerCase();
+  if (["pending", "queued", "submitted"].includes(normalized)) {
+    return "secondary" as const;
+  }
   if (["completed", "done", "succeeded"].includes(normalized)) {
     return "success" as const;
   }
   if (["failed", "error", "rejected"].includes(normalized)) {
     return "destructive" as const;
   }
-  if (["running", "pending", "queued", "processing"].includes(normalized)) {
-    return "warning" as const;
+  if (["running", "processing"].includes(normalized)) {
+    return "info" as const;
   }
   return "secondary" as const;
 }
@@ -66,13 +69,13 @@ export function StatusPanel({ status }: StatusPanelProps) {
               <li key={step} className="flex items-center gap-3">
                 <span
                   className={cn(
-                    "h-2.5 w-2.5 rounded-full bg-slate-300",
-                    state === "active" && "bg-amber-500",
-                    state === "done" && "bg-emerald-500",
-                    state === "failed" && "bg-rose-600",
+                    "h-2.5 w-2.5 rounded-full bg-[#3f3f46]",
+                    state === "active" && "bg-[#2563eb]",
+                    state === "done" && "bg-[#16a34a]",
+                    state === "failed" && "bg-[#dc2626]",
                   )}
                 />
-                <span className="text-sm text-slate-800">{step}</span>
+                <span className="text-sm text-[#d4d4d8]">{step}</span>
               </li>
             );
           })}
