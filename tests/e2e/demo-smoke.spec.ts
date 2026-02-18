@@ -43,12 +43,14 @@ test("demo flow renders decision and download actions", async ({ page }) => {
   });
 
   await page.goto("/demo");
-  await expect(page.getByRole("heading", { name: "PolicyForge Demo" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Eligibility evaluation", exact: true }),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "Run evaluation" }).click();
   await expect(page).toHaveURL(/\/demo\/req_smoke_001/);
 
-  await expect(page.getByRole("heading", { name: "Decision" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "Decision result" })).toBeVisible({
     timeout: 30_000,
   });
   await expect(page.getByText("approved")).toBeVisible();

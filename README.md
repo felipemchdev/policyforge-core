@@ -1,226 +1,141 @@
 # PolicyForge App
 
-PolicyForge App is a product demo for recruiter-facing policy evaluation workflows in education.
-The user selects one of ten templates, edits fields, submits to an external policy engine, and tracks request status with 1.5s polling.
-When evaluation is complete, the UI shows decision, reasons, computed fields, and artifact download actions (JSON, CSV, PDF).
+PolicyForge App is a frontend demo for education eligibility evaluation.
+Recruiters can select one of ten templates, edit fields, submit a request to the policy engine, and track processing status in real time.
+When the request is complete, the UI shows decision result, reasons, computed fields, and download actions for JSON, CSV, and PDF.
 
-The frontend is built with Next.js App Router, TypeScript, Tailwind, shadcn-style UI components, react-hook-form, and zod validation.
-The app does not call the engine directly from the browser.
-All engine communication goes through local Next.js API proxy routes with simple in-memory rate limiting and safe error handling.
-The proxy never logs full payloads, which helps reduce accidental PII exposure.
+The app is built with Next.js App Router, TypeScript, Tailwind, react-hook-form, and zod.
+Engine calls are handled by Next.js API proxy routes.
+The proxy includes in-memory rate limit and technical error mapping for configuration errors, network failures, timeout, and engine 5xx.
 
-The project runs locally and on Vercel free tier.
-Engine runtime is external and configurable with `ENGINE_URL` (default: `http://localhost:8000`).
-If the engine is offline, the UI shows an explicit banner with setup instructions for local and Vercel environments.
+The product runs locally and on Vercel free tier.
+Engine endpoint configuration is mandatory through public environment variables.
+If configuration is missing, the UI shows a technical banner with clear setup instructions.
 
 ## Architecture Overview
 
-```
+```txt
 Browser
   |
   v
 Next.js App (UI + App Router)
   |\
-  | \-- /api/engine/requests (proxy + rate limit)
-  |      /api/engine/requests/{id}
-  |      /api/engine/requests/{id}/result
-  |      /api/engine/requests/{id}/artifacts/{type}
-  |
-  v
-External Policy Engine (ENGINE_URL)
-```
-
-Key folders:
-
-- `app/(marketing)/page.tsx`: landing page with CTA
-- `app/demo/page.tsx`: template selection + dynamic form
-- `app/demo/[requestId]/page.tsx`: live status + result
-- `app/api/engine/**`: engine proxy routes
-- `src/lib/templates.ts`: 10 templates + policy pack suggestions
-- `src/lib/engineClient.ts`: typed browser client for proxy routes
-- `src/schemas/`: zod schemas
-- `src/components/demo/`: TemplatePicker, DynamicForm, StatusPanel, ResultView
-- `tests/unit/`: Vitest tests
-- `tests/e2e/`: Playwright smoke test
-
-## Run Locally
-
-Environment:
-
-- Node.js 20+
-- pnpm 10+
-
-Set engine URL:
-
-```bash
-cp .env.example .env.local
-```
-
-`.env.local`
-
-```bash
-ENGINE_URL=http://localhost:8000
-```
-
-One-command path:
-
-```bash
-pnpm install && pnpm dev
-```
-
-Open `http://localhost:3000`.
-
-Example output snippet:
-
-```txt
-▲ Next.js 16.x
-- Local: http://localhost:3000
-✓ Ready in ...
-```
-
-## Run Tests
-
-Unit tests (Vitest):
-
-```bash
-pnpm test
-```
-
-Smoke test (Playwright):
-
-```bash
-pnpm test:e2e
-```
-
-Lint and build:
-
-```bash
-pnpm lint
-pnpm build
-```
-
-Example output snippet:
-
-```txt
-✓ 5 passed
-✓ Lint completed with no warnings
-✓ Compiled successfully
-```
-
-## CI
-
-GitHub Actions workflows:
-
-- `.github/workflows/ci.yml`: install, lint, unit tests, build
-- `.github/workflows/e2e.yml`: Playwright smoke on PR to `qa/master`, nightly, manual dispatch
-
-## Limitations
-
-- Rate limiting is in-memory, so counters reset per process restart.
-- Artifact download depends on engine support and availability.
-- Polling interval is fixed at 1.5s and not adaptive.
-
-## Next Steps
-
-1. Add authenticated access control and audit trail.
-2. Persist request snapshots for historical search and replays.
-3. Add retry strategy with jitter and exponential backoff on transient failures.
-
----
-
-# PolicyForge App (Portugues)
-
-O PolicyForge App e uma demo de produto para fluxo de avaliacao de politicas na area de educacao.
-Quem recruta escolhe um template, ajusta os campos, envia o pedido para a engine e acompanha o status em tempo quase real.
-Quando termina, a tela mostra decisao, motivos, campos calculados e botoes de download em JSON, CSV e PDF.
-
-A aplicacao usa Next.js com App Router, TypeScript, Tailwind, componentes no padrao shadcn/ui, react-hook-form e zod.
-O navegador nao fala direto com a engine.
-Toda chamada passa por rotas de proxy no Next.js, com limite simples em memoria e tratamento de erro sem expor dados sensiveis.
-Nao existe log de corpo completo no proxy.
-
-Funciona localmente e tambem na Vercel free.
-A URL da engine vem da variavel `ENGINE_URL` (padrao `http://localhost:8000`).
-Se a engine estiver fora do ar, aparece um aviso "Engine offline" com orientacao de configuracao.
-
-## Visao de Arquitetura
-
-```
-Navegador
-  |
-  v
-Next.js (UI + rotas)
-  |\
+  | \-- /api/engine/health
   | \-- /api/engine/requests
   |      /api/engine/requests/{id}
   |      /api/engine/requests/{id}/result
   |      /api/engine/requests/{id}/artifacts/{type}
   |
   v
-Engine externa (ENGINE_URL)
+Policy Engine (Cloud Run)
 ```
 
-Estrutura principal:
+## Required Environment Variables
 
-- `app/(marketing)/page.tsx`: pagina inicial com CTA
-- `app/demo/page.tsx`: selecao de template e formulario
-- `app/demo/[requestId]/page.tsx`: status e resultado
-- `app/api/engine/**`: rotas de proxy
-- `src/lib/templates.ts`: 10 templates e packs sugeridos
-- `src/lib/engineClient.ts`: cliente tipado
-- `src/schemas/`: validacao zod
-- `src/components/demo/`: componentes da demo
+- `NEXT_PUBLIC_ENGINE_URL`
+- `NEXT_PUBLIC_ENVIRONMENT` (`dev`, `qa`, `prod`)
 
-## Como Rodar
-
-Pre-requisitos:
-
-- Node.js 20+
-- pnpm 10+
-
-Arquivo de ambiente:
+Example `.env.local`:
 
 ```bash
-cp .env.example .env.local
+NEXT_PUBLIC_ENGINE_URL=https://your-cloud-run-service.run.app
+NEXT_PUBLIC_ENVIRONMENT=dev
 ```
 
-Conteudo:
-
-```bash
-ENGINE_URL=http://localhost:8000
-```
-
-Comando direto:
+## Run
 
 ```bash
 pnpm install && pnpm dev
 ```
 
-## Como Rodar Testes
-
-```bash
-pnpm test
-pnpm test:e2e
-pnpm lint
-pnpm build
-```
-
-Saida esperada (resumo):
+Example output:
 
 ```txt
-tests/unit ... passed
-tests/e2e ... passed
-build ... success
+Next.js dev server started
+Ready in ...
+```
+
+## Tests and Quality
+
+```bash
+pnpm lint
+pnpm test
+pnpm build
+pnpm test:e2e
+```
+
+Example output:
+
+```txt
+lint: ok
+tests: 5 passed
+build: success
+playwright: 1 passed
+```
+
+## Limitations
+
+- Rate limit is in-memory.
+- Polling timeout is 60 seconds.
+- Artifact download depends on engine availability.
+
+## Next Steps
+
+1. Add authentication and audit trail.
+2. Store request history for filtering and replay.
+3. Add retries with backoff for transient network errors.
+
+---
+
+# PolicyForge App (Portugues)
+
+O PolicyForge App e uma demo de frontend para avaliacao de elegibilidade em educacao.
+O fluxo permite escolher um template, preencher campos, enviar para a engine e acompanhar o status do processamento.
+Quando termina, a tela mostra resultado da decisao, motivos, campos calculados e downloads em JSON, CSV e PDF.
+
+A aplicacao foi feita com Next.js App Router, TypeScript, Tailwind, react-hook-form e zod.
+As chamadas da engine passam por rotas de proxy no Next.js.
+O proxy aplica rate limit simples em memoria e separa erros tecnicos de configuracao, rede, timeout e erro 5xx da engine.
+
+Funciona localmente e na Vercel free.
+As variaveis de ambiente publicas sao obrigatorias.
+Se faltar configuracao, a interface mostra aviso tecnico com instrucao direta.
+
+## Variaveis de ambiente obrigatorias
+
+- `NEXT_PUBLIC_ENGINE_URL`
+- `NEXT_PUBLIC_ENVIRONMENT` (`dev`, `qa`, `prod`)
+
+Exemplo `.env.local`:
+
+```bash
+NEXT_PUBLIC_ENGINE_URL=https://your-cloud-run-service.run.app
+NEXT_PUBLIC_ENVIRONMENT=dev
+```
+
+## Como rodar
+
+```bash
+pnpm install && pnpm dev
+```
+
+## Como rodar qualidade e testes
+
+```bash
+pnpm lint
+pnpm test
+pnpm build
+pnpm test:e2e
 ```
 
 ## Limites atuais
 
-- Rate limit em memoria (reinicia junto com processo).
-- Downloads dependem da disponibilidade da engine.
-- Polling fixo de 1.5s.
+- Rate limit em memoria.
+- Timeout de polling em 60 segundos.
+- Download depende da disponibilidade da engine.
 
 ## Proximos passos
 
-1. Adicionar controle de acesso.
+1. Adicionar autenticacao e trilha de auditoria.
 2. Guardar historico de requisicoes.
-3. Melhorar estrategia de retry.
+3. Melhorar retry para falhas temporarias de rede.
