@@ -4,10 +4,10 @@ import { engineRequestStatusSchema } from "@/schemas/engine";
 import {
   coerceId,
   coerceStatus,
-  engineOfflineResponse,
   fetchEngine,
   proxyEngineError,
   readJsonSafe,
+  responseForEngineFetchFailure,
   withRateLimit,
 } from "@/lib/server/engineProxy";
 
@@ -22,12 +22,13 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  const response = await fetchEngine(`/v1/requests/${id}`);
+  const engineCall = await fetchEngine(`/v1/requests/${id}`);
 
-  if (!response) {
-    return engineOfflineResponse();
+  if (!engineCall.ok) {
+    return responseForEngineFetchFailure(engineCall.failure);
   }
 
+  const { response } = engineCall;
   if (!response.ok) {
     return proxyEngineError(response);
   }

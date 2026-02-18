@@ -7,10 +7,10 @@ import {
 import {
   coerceId,
   coerceStatus,
-  engineOfflineResponse,
   fetchEngine,
   proxyEngineError,
   readJsonSafe,
+  responseForEngineFetchFailure,
   withRateLimit,
 } from "@/lib/server/engineProxy";
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const response = await fetchEngine("/v1/requests", {
+  const engineCall = await fetchEngine("/v1/requests", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -52,10 +52,11 @@ export async function POST(request: NextRequest) {
     body: JSON.stringify(parsed.data),
   });
 
-  if (!response) {
-    return engineOfflineResponse();
+  if (!engineCall.ok) {
+    return responseForEngineFetchFailure(engineCall.failure);
   }
 
+  const { response } = engineCall;
   if (!response.ok) {
     return proxyEngineError(response);
   }

@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { engineRequestResultSchema } from "@/schemas/engine";
 import {
   coerceId,
-  engineOfflineResponse,
   fetchEngine,
   proxyEngineError,
   readJsonSafe,
+  responseForEngineFetchFailure,
   withRateLimit,
 } from "@/lib/server/engineProxy";
 
@@ -75,6 +75,44 @@ function coerceComputedFields(payload: unknown) {
   return {};
 }
 
+function coerceArtifacts(payload: unknown) {
+  const artifactSource = (payload &&
+    typeof payload === "object" &&
+    ((payload as Record<string, unknown>).artifacts ??
+      ((payload as Record<string, unknown>).result as Record<string, unknown> | undefined)
+        ?.artifacts)) as unknown;
+
+  if (!artifactSource || typeof artifactSource !== "object") {
+    return undefined;
+  }
+
+  const normalized: Record<string, { signed_url?: string; endpoint?: string }> = {};
+
+  for (const [key, value] of Object.entries(artifactSource as Record<string, unknown>)) {
+    if (typeof value === "string") {
+      normalized[key] = /^https?:\/\//i.test(value) ? { signed_url: value } : { endpoint: value };
+      continue;
+    }
+
+    if (!value || typeof value !== "object") {
+      continue;
+    }
+
+    const candidate = value as Record<string, unknown>;
+    const signedUrl = typeof candidate.signed_url === "string" ? candidate.signed_url : undefined;
+    const endpoint = typeof candidate.endpoint === "string" ? candidate.endpoint : undefined;
+
+    if (signedUrl || endpoint) {
+      normalized[key] = {
+        signed_url: signedUrl,
+        endpoint,
+      };
+    }
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
+}
+
 export async function GET(request: NextRequest, context: RouteContext) {
   const limited = withRateLimit(request, "get-result");
   if (limited) {
@@ -82,12 +120,13 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  const response = await fetchEngine(`/v1/requests/${id}/result`);
+  const engineCall = await fetchEngine(`/v1/requests/${id}/result`);
 
-  if (!response) {
-    return engineOfflineResponse();
+  if (!engineCall.ok) {
+    return responseForEngineFetchFailure(engineCall.failure);
   }
 
+  const { response } = engineCall;
   if (!response.ok) {
     return proxyEngineError(response);
   }
@@ -98,6 +137,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     decision: coerceDecision(engineData),
     reasons: coerceReasons(engineData),
     computed_fields: coerceComputedFields(engineData),
+    artifacts: coerceArtifacts(engineData),
   });
 
   return NextResponse.json(normalized);
