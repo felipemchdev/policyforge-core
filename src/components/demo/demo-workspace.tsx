@@ -4,16 +4,34 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { DynamicForm } from "@/components/demo/dynamic-form";
-import { EngineOfflineBanner } from "@/components/demo/engine-offline-banner";
+import { EngineConfigBanner } from "@/components/demo/engine-config-banner";
+import { StatusPanel } from "@/components/demo/status-panel";
 import { TemplatePicker } from "@/components/demo/template-picker";
-import { submitEngineRequest, EngineClientError } from "@/lib/engineClient";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EngineClientError, submitEngineRequest } from "@/lib/engineClient";
 import { TEMPLATES, type TemplateId } from "@/lib/templates";
+
+function getSubmitErrorMessage(error: EngineClientError) {
+  if (error.category === "not_configured") {
+    return "Engine not configured";
+  }
+  if (error.category === "network_error") {
+    return "Engine unreachable";
+  }
+  if (error.category === "timeout") {
+    return "Engine timeout";
+  }
+  if (error.category === "engine_5xx") {
+    return "Engine returned error";
+  }
+  return error.message;
+}
 
 export function DemoWorkspace() {
   const router = useRouter();
   const [selectedTemplateId, setSelectedTemplateId] = useState<TemplateId>(TEMPLATES[0].id);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [offlineInstructions, setOfflineInstructions] = useState<string[] | undefined>(undefined);
+  const [configInstructions, setConfigInstructions] = useState<string[] | undefined>(undefined);
 
   const selectedTemplate = useMemo(
     () => TEMPLATES.find((template) => template.id === selectedTemplateId) ?? TEMPLATES[0],
@@ -26,7 +44,7 @@ export function DemoWorkspace() {
     options: Record<string, unknown>;
   }) {
     setSubmitError(null);
-    setOfflineInstructions(undefined);
+    setConfigInstructions(undefined);
 
     try {
       const response = await submitEngineRequest({
@@ -37,40 +55,63 @@ export function DemoWorkspace() {
       router.push(`/demo/${response.id}`);
     } catch (error) {
       if (error instanceof EngineClientError) {
-        setSubmitError(error.message);
-        if (error.offline) {
-          setOfflineInstructions(error.instructions);
+        setSubmitError(getSubmitErrorMessage(error));
+        if (error.category === "not_configured") {
+          setConfigInstructions(error.instructions);
         }
         return;
       }
-      setSubmitError("Unexpected error while submitting the request.");
+      setSubmitError("Engine request failed");
     }
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-8">
+    <div className="mx-auto w-full max-w-5xl space-y-8 px-4 py-16">
       <header className="space-y-2">
-        <h1 className="text-3xl font-bold text-slate-900">PolicyForge Demo</h1>
-        <p className="text-slate-700">
-          Select a template, edit the data, and run a policy evaluation.
+        <h1 className="text-2xl font-semibold text-[#f5f5f5]">Eligibility evaluation</h1>
+        <p className="text-sm text-[#a1a1aa]">
+          Select a template, edit input fields, and run policy execution.
         </p>
       </header>
 
-      {offlineInstructions ? <EngineOfflineBanner instructions={offlineInstructions} /> : null}
+      {configInstructions ? <EngineConfigBanner instructions={configInstructions} /> : null}
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-slate-900">1. Pick a template</h2>
-        <TemplatePicker
-          templates={TEMPLATES}
-          selectedId={selectedTemplate.id}
-          onSelect={setSelectedTemplateId}
-        />
-      </section>
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <section className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Template selection</CardTitle>
+              <CardDescription>Choose one policy template before submitting.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TemplatePicker
+                templates={TEMPLATES}
+                selectedId={selectedTemplate.id}
+                onSelect={setSelectedTemplateId}
+              />
+            </CardContent>
+          </Card>
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-slate-900">2. Submit request</h2>
-        <DynamicForm template={selectedTemplate} onSubmit={onSubmit} submitError={submitError} />
-      </section>
+          <DynamicForm template={selectedTemplate} onSubmit={onSubmit} submitError={submitError} />
+        </section>
+
+        <aside className="space-y-4">
+          <StatusPanel status="pending" />
+          <Card>
+            <CardHeader>
+              <CardTitle>Decision result</CardTitle>
+              <CardDescription>
+                Result cards will be shown after request submission.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-[#a1a1aa]">
+                Submit the form to start processing request and open the request dashboard.
+              </p>
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
     </div>
   );
 }

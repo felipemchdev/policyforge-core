@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getEngineArtifactUrl } from "@/lib/engineClient";
+import { resolveArtifactUrl } from "@/lib/engineClient";
 import type { EngineRequestResult } from "@/schemas/engine";
 
 interface ResultViewProps {
@@ -45,26 +45,26 @@ export function ResultView({ requestId, result }: ResultViewProps) {
   const computedRows = Object.entries(result.computed_fields);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Decision</CardTitle>
-            <CardDescription>Final output from policy evaluation.</CardDescription>
+            <CardTitle>Decision result</CardTitle>
+            <CardDescription>Final output from policy execution.</CardDescription>
           </div>
           <Badge variant={decisionVariant(result.decision)}>{result.decision}</Badge>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-slate-800">Reasons</h3>
+            <h3 className="mb-2 text-sm font-semibold text-[#d4d4d8]">Reasons</h3>
             {result.reasons.length > 0 ? (
-              <ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">
+              <ul className="list-disc space-y-1 pl-5 text-sm text-[#a1a1aa]">
                 {result.reasons.map((reason) => (
                   <li key={reason}>{reason}</li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-600">No reasons were returned by the engine.</p>
+              <p className="text-sm text-[#a1a1aa]">No reasons were returned by the engine.</p>
             )}
           </div>
         </CardContent>
@@ -73,7 +73,7 @@ export function ResultView({ requestId, result }: ResultViewProps) {
       <Card>
         <CardHeader>
           <CardTitle>Computed fields</CardTitle>
-          <CardDescription>Derived values returned with the decision.</CardDescription>
+          <CardDescription>Derived values returned with the decision result.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Table>
@@ -87,8 +87,8 @@ export function ResultView({ requestId, result }: ResultViewProps) {
               {computedRows.length > 0 ? (
                 computedRows.map(([key, value]) => (
                   <TableRow key={key}>
-                    <TableCell className="font-medium">{key}</TableCell>
-                    <TableCell>{toText(value)}</TableCell>
+                    <TableCell className="font-medium text-[#d4d4d8]">{key}</TableCell>
+                    <TableCell className="text-[#a1a1aa]">{toText(value)}</TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -102,17 +102,41 @@ export function ResultView({ requestId, result }: ResultViewProps) {
 
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
-              <a href={getEngineArtifactUrl(requestId, "json")} target="_blank" rel="noreferrer">
+              <a
+                href={resolveArtifactUrl({
+                  requestId,
+                  type: "json",
+                  artifacts: result.artifacts,
+                })}
+                target="_blank"
+                rel="noreferrer"
+              >
                 Download JSON
               </a>
             </Button>
             <Button asChild variant="secondary">
-              <a href={getEngineArtifactUrl(requestId, "csv")} target="_blank" rel="noreferrer">
+              <a
+                href={resolveArtifactUrl({
+                  requestId,
+                  type: "csv",
+                  artifacts: result.artifacts,
+                })}
+                target="_blank"
+                rel="noreferrer"
+              >
                 Download CSV
               </a>
             </Button>
             <Button asChild variant="secondary">
-              <a href={getEngineArtifactUrl(requestId, "pdf")} target="_blank" rel="noreferrer">
+              <a
+                href={resolveArtifactUrl({
+                  requestId,
+                  type: "pdf",
+                  artifacts: result.artifacts,
+                })}
+                target="_blank"
+                rel="noreferrer"
+              >
                 Download PDF
               </a>
             </Button>
